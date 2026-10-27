@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Inventory Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app" class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-logo">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                    <div class="brand-info">
+                        <h2>SmartInventory</h2>
+                        <span class="badge badge-subtle">Enterprise Core</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-tab="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-tab="products">
+                    <span class="nav-icon">📦</span>
+                    <span>Products</span>
+                </button>
+                <button class="nav-item" data-tab="categories">
+                    <span class="nav-icon">📁</span>
+                    <span>Categories</span>
+                </button>
+                <button class="nav-item" data-tab="suppliers">
+                    <span class="nav-icon">🏢</span>
+                    <span>Suppliers</span>
+                </button>
+                <button class="nav-item" data-tab="inventory">
+                    <span class="nav-icon">🔄</span>
+                    <span>Stock Movements</span>
+                </button>
+                <button class="nav-item" data-tab="lowstock">
+                    <span class="nav-icon">⚠️</span>
+                    <span>Low Stock Alerts</span>
+                    <span id="low-stock-badge" class="nav-badge danger">0</span>
+                </button>
+                <button class="nav-item" data-tab="purchaseorders">
+                    <span class="nav-icon">📋</span>
+                    <span>Purchase Orders</span>
+                    <span id="pending-po-badge" class="nav-badge warning">0</span>
+                </button>
+                <button class="nav-item" data-tab="reports">
+                    <span class="nav-icon">📑</span>
+                    <span>Reports & CSV</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="db-status-pill">
+                    <span class="status-dot online"></span>
+                    <span id="db-driver-label">DB: Connecting...</span>
+                </div>
+                <div class="system-time" id="system-time-display">--:--:--</div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-wrapper">
+            <!-- Top Navigation Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button id="sidebar-toggle" class="btn-icon" aria-label="Toggle navigation">☰</button>
+                    <div class="page-title-box">
+                        <h1 id="page-title">Dashboard Overview</h1>
+                        <p id="page-subtitle" class="text-muted">Real-time inventory metrics and database records</p>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="user-profile-badge">
+                        <div class="user-avatar" id="user-avatar-initials">AD</div>
+                        <div class="user-details">
+                            <span class="user-name" id="user-display-name">Administrator</span>
+                            <span class="user-role badge badge-primary" id="user-display-role">ADMIN</span>
+                        </div>
+                    </div>
+
+                    <button id="btn-auth-action" class="btn btn-outline btn-sm">Switch User / Login</button>
+                </div>
+            </header>
+
+            <!-- Page Views Container -->
+            <div class="content-container">
+                <!-- VIEW 1: DASHBOARD -->
+                <section id="view-dashboard" class="page-view active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper blue">📦</div>
+                            <div class="stat-content">
+                                <span class="stat-label">Active Products</span>
+                                <h3 class="stat-value" id="stat-products">0</h3>
+                                <span class="stat-helper"><span id="stat-units">0</span> total units stored</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper green">💰</div>
+                            <div class="stat-content">
+                                <span class="stat-label">Inventory Valuation</span>
+                                <h3 class="stat-value" id="stat-valuation">$0.00</h3>
+                                <span class="stat-helper">Cost-basis inventory asset</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card warning-card">
+                            <div class="stat-icon-wrapper orange">⚠️</div>
+                            <div class="stat-content">
+                                <span class="stat-label">Low Stock Alerts</span>
+                                <h3 class="stat-value text-warning" id="stat-low-stock">0</h3>
+                                <span class="stat-helper"><span id="stat-out-of-stock">0</span> items completely out</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper purple">📋</div>
+                            <div class="stat-content">
+                                <span class="stat-label">Pending POs</span>
+                                <h3 class="stat-value" id="stat-pending-po">0</h3>
+                                <span class="stat-helper"><span id="stat-received-po">0</span> orders received</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper teal">📁</div>
+                            <div class="stat-content">
+                                <span class="stat-label">Categories</span>
+                                <h3 class="stat-value" id="stat-categories">0</h3>
+                                <span class="stat-helper">Product classifications</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper indigo">🏢</div>
+                            <div class="stat-content">
+                                <span class="stat-label">Suppliers</span>
+                                <h3 class="stat-value" id="stat-suppliers">0</h3>
+                                <span class="stat-helper">Verified active vendors</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Breakdown Row -->
+                    <div class="dashboard-grid-2">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>Stock Health Distribution</h3>
+                                <span class="text-muted text-sm">Real-time status breakdown</span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="distribution-bars" id="stock-distribution-container">
+                                    <!-- Rendered dynamically -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>Quick Actions</h3>
+                                <span class="text-muted text-sm">Fast warehouse shortcuts</span>
+                            </div>
+                            <div class="panel-body quick-actions-container">
+                                <button class="btn btn-primary" onclick="openStockModal('STOCK_IN')">📥 Quick Stock-In</button>
+                                <button class="btn btn-warning" onclick="openStockModal('STOCK_OUT')">📤 Quick Stock-Out</button>
+                                <button class="btn btn-outline" onclick="openStockModal('ADJUSTMENT')">⚖️ Inventory Adjustment</button>
+                                <button class="btn btn-secondary" onclick="openProductModal()">➕ New Product</button>
+                                <button class="btn btn-secondary" onclick="openPOModal()">📝 New Purchase Order</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Tables Row -->
+                    <div class="dashboard-grid-2">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>Recent Stock Movements</h3>
+                                <button class="btn-link" onclick="switchTab('inventory')">View all</button>
+                            </div>
+                            <div class="panel-body p-0">
+                                <div class="table-responsive">
+                                    <table class="data-table" id="table-dash-movements">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th>Type</th>
+                                                <th>Qty</th>
+                                                <th>Stock</th>
+                                                <th>Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Dynamically populated -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>Recently Cataloged Products</h3>
+                                <button class="btn-link" onclick="switchTab('products')">View all</button>
+                            </div>
+                            <div class="panel-body p-0">
+                                <div class="table-responsive">
+                                    <table class="data-table" id="table-dash-products">
+                                        <thead>
+                                            <tr>
+                                                <th>SKU</th>
+                                                <th>Name</th>
+                                                <th>Category</th>
+                                                <th>Stock</th>
+                                                <th>Cost</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Dynamically populated -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 2: PRODUCTS -->
+                <section id="view-products" class="page-view">
+                    <div class="toolbar">
+                        <div class="toolbar-left">
+                            <div class="search-box">
+                                <input type="text" id="product-search" placeholder="Search by product name or SKU..." oninput="debounce(loadProducts, 300)()">
+                            </div>
+                            <select id="product-cat-filter" onchange="loadProducts()">
+                                <option value="">All Categories</option>
+                            </select>
+                            <select id="product-stock-filter" onchange="loadProducts()">
+                                <option value="">All Stock Levels</option>
+                                <option value="in_stock">Healthy (In Stock)</option>
+                                <option value="low_stock">Low Stock (≤ Threshold)</option>
+                                <option value="out_of_stock">Out of Stock (0)</option>
+                            </select>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="btn btn-primary" onclick="openProductModal()">➕ Add Product</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-body p-0">
+                            <div class="table-responsive">
+                                <table class="data-table" id="table-products">
+                                    <thead>
+                                        <tr>
+                                            <th onclick="sortProducts('sku')">SKU ↕</th>
+                                            <th onclick="sortProducts('name')">Product Name ↕</th>
+                                            <th>Category</th>
+                                            <th>Supplier</th>
+                                            <th onclick="sortProducts('unit_cost')">Unit Cost ↕</th>
+                                            <th onclick="sortProducts('selling_price')">Price ↕</th>
+                                            <th onclick="sortProducts('current_stock')">Stock ↕</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-products">
+                                        <!-- Products injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="panel-footer pagination-footer">
+                            <span class="text-muted text-sm" id="product-pagination-info">Showing 0-0 of 0</span>
+                            <div class="pagination-controls" id="product-pagination-btns"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 3: CATEGORIES -->
+                <section id="view-categories" class="page-view">
+                    <div class="toolbar">
+                        <div class="toolbar-left">
+                            <h3>Product Categories</h3>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="btn btn-primary" onclick="openCategoryModal()">➕ Add Category</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-body p-0">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Category Name</th>
+                                            <th>Description</th>
+                                            <th>Active Products</th>
+                                            <th>Total Units</th>
+                                            <th>Inventory Value</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-categories">
+                                        <!-- Categories injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 4: SUPPLIERS -->
+                <section id="view-suppliers" class="page-view">
+                    <div class="toolbar">
+                        <div class="toolbar-left">
+                            <div class="search-box">
+                                <input type="text" id="supplier-search" placeholder="Search supplier or contact..." oninput="debounce(loadSuppliers, 300)()">
+                            </div>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="btn btn-primary" onclick="openSupplierModal()">➕ Add Supplier</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-body p-0">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Supplier Name</th>
+                                            <th>Contact Person</th>
+                                            <th>Email</th>
+                                            <th>Phone</th>
+                                            <th>Address</th>
+                                            <th>Products Supplied</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-suppliers">
+                                        <!-- Suppliers injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 5: INVENTORY MOVEMENTS -->
+                <section id="view-inventory" class="page-view">
+                    <div class="toolbar">
+                        <div class="toolbar-left">
+                            <select id="movement-type-filter" onchange="loadMovements()">
+                                <option value="">All Movement Types</option>
+                                <option value="STOCK_IN">Stock In (Receipts)</option>
+                                <option value="STOCK_OUT">Stock Out (Dispatches)</option>
+                                <option value="ADJUSTMENT">Adjustments (Audits)</option>
+                            </select>
+                            <input type="date" id="movement-start-date" onchange="loadMovements()">
+                            <input type="date" id="movement-end-date" onchange="loadMovements()">
+                            <button class="btn btn-outline btn-sm" onclick="clearMovementFilters()">Reset</button>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="btn btn-success" onclick="openStockModal('STOCK_IN')">📥 Stock In</button>
+                            <button class="btn btn-warning" onclick="openStockModal('STOCK_OUT')">📤 Stock Out</button>
+                            <button class="btn btn-outline" onclick="openStockModal('ADJUSTMENT')">⚖️ Adjust</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-body p-0">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Timestamp</th>
+                                            <th>Product / SKU</th>
+                                            <th>Movement</th>
+                                            <th>Qty</th>
+                                            <th>Stock Change</th>
+                                            <th>Reference</th>
+                                            <th>Reason / Notes</th>
+                                            <th>Recorded By</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-movements">
+                                        <!-- Movements injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="panel-footer pagination-footer">
+                            <span class="text-muted text-sm" id="movement-pagination-info">Showing 0-0 of 0</span>
+                            <div class="pagination-controls" id="movement-pagination-btns"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 6: LOW STOCK ALERTS -->
+                <section id="view-lowstock" class="page-view">
+                    <div class="alert-banner warning">
+                        <div class="alert-icon">⚠️</div>
+                        <div class="alert-content">
+                            <strong>Low Stock Threshold Detection Active</strong>
+                            <p>Products below their configured minimum threshold require replenishment. Reorder suggestions are calculated as <code>Target (2× Threshold) - Current Stock</code>.</p>
+                        </div>
+                    </div>
+
+                    <div class="toolbar">
+                        <div class="toolbar-left">
+                            <div class="search-box">
+                                <input type="text" id="lowstock-search" placeholder="Search low stock items..." oninput="debounce(loadLowStock, 300)()">
+                            </div>
+                        </div>
+                        <div class="toolbar-right">
+                            <a href="/api/reports/export.csv?type=low_stock" class="btn btn-outline" download>📥 Export Low Stock CSV</a>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-body p-0">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>SKU</th>
+                                            <th>Product Name</th>
+                                            <th>Category</th>
+                                            <th>Supplier</th>
+                                            <th>Current Stock</th>
+                                            <th>Threshold</th>
+                                            <th>Suggested Reorder</th>
+                                            <th>Est. Restock Cost</th>
+                                            <th>Severity</th>
+                                            <th>Restock Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-lowstock">
+                                        <!-- Low stock injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 7: PURCHASE ORDERS -->
+                <section id="view-purchaseorders" class="page-view">
+                    <div class="toolbar">
+                        <div class="toolbar-left">
+                            <select id="po-status-filter" onchange="loadPurchaseOrders()">
+                                <option value="">All PO Statuses</option>
+                                <option value="ORDERED">ORDERED (Pending Delivery)</option>
+                                <option value="RECEIVED">RECEIVED (Restocked)</option>
+                                <option value="DRAFT">DRAFT</option>
+                                <option value="CANCELLED">CANCELLED</option>
+                            </select>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="btn btn-primary" onclick="openPOModal()">➕ Create Purchase Order</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-body p-0">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>PO Number</th>
+                                            <th>Supplier</th>
+                                            <th>Order Date</th>
+                                            <th>Delivery Date</th>
+                                            <th>Items</th>
+                                            <th>Total Amount</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-pos">
+                                        <!-- POs injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="panel-footer pagination-footer">
+                            <span class="text-muted text-sm" id="po-pagination-info">Showing 0-0 of 0</span>
+                            <div class="pagination-controls" id="po-pagination-btns"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 8: REPORTS & EXPORT -->
+                <section id="view-reports" class="page-view">
+                    <div class="report-tabs">
+                        <button class="report-tab active" onclick="switchReportTab('inventory')">Inventory Valuation Report</button>
+                        <button class="report-tab" onclick="switchReportTab('category')">Category Breakdown</button>
+                        <button class="report-tab" onclick="switchReportTab('supplier')">Supplier Spending Report</button>
+                        <button class="report-tab" onclick="switchReportTab('purchases')">Procurement Summary</button>
+                    </div>
+
+                    <div class="toolbar">
+                        <div class="toolbar-left">
+                            <h3 id="current-report-title">Inventory Valuation & Margins</h3>
+                        </div>
+                        <div class="toolbar-right">
+                            <button id="btn-export-report-csv" class="btn btn-outline" onclick="exportActiveReportCsv()">📥 Download CSV</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-body p-0" id="report-content-container">
+                            <!-- Report tables rendered here -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL 1: PRODUCT MODAL (Create/Edit) -->
+    <div id="modal-product" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-product-title">Add New Product</h3>
+                <button class="modal-close" onclick="closeModal('modal-product')">&times;</button>
+            </div>
+            <form id="form-product" onsubmit="handleProductSubmit(event)">
+                <input type="hidden" id="prod-id">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="prod-sku">SKU (Stock Keeping Unit) *</label>
+                            <input type="text" id="prod-sku" required placeholder="e.g. SKU-KBD-870">
+                            <small class="text-muted">Must be globally unique</small>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="prod-name">Product Name *</label>
+                            <input type="text" id="prod-name" required placeholder="e.g. Mechanical Keyboard RGB">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prod-desc">Description</label>
+                        <textarea id="prod-desc" rows="2" placeholder="Brief technical or catalog description..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="prod-category">Category *</label>
+                            <select id="prod-category" required></select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="prod-supplier">Primary Supplier *</label>
+                            <select id="prod-supplier" required></select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="prod-unit-cost">Unit Cost ($) *</label>
+                            <input type="number" step="0.01" min="0" id="prod-unit-cost" required value="0.00">
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="prod-selling-price">Selling Price ($) *</label>
+                            <input type="number" step="0.01" min="0" id="prod-selling-price" required value="0.00">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6" id="group-initial-stock">
+                            <label for="prod-initial-stock">Initial Stock Quantity</label>
+                            <input type="number" min="0" id="prod-initial-stock" value="0">
+                            <small class="text-muted">Only configurable on initial creation</small>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="prod-min-threshold">Min Stock Threshold *</label>
+                            <input type="number" min="0" id="prod-min-threshold" required value="10">
+                            <small class="text-muted">Triggers low stock alert when stock ≤ threshold</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-product')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-product">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: STOCK MOVEMENT MODAL (Stock-In / Stock-Out / Adjust) -->
+    <div id="modal-stock" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-stock-title">Record Stock Movement</h3>
+                <button class="modal-close" onclick="closeModal('modal-stock')">&times;</button>
+            </div>
+            <form id="form-stock" onsubmit="handleStockSubmit(event)">
+                <input type="hidden" id="stock-movement-type">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="stock-product-select">Select Product *</label>
+                        <select id="stock-product-select" required onchange="handleStockProductChange()"></select>
+                    </div>
+
+                    <div class="stock-info-card" id="stock-product-preview" style="display: none;">
+                        <div>Current Stock: <strong id="preview-current-stock">0</strong></div>
+                        <div>Min Threshold: <span id="preview-threshold">0</span></div>
+                    </div>
+
+                    <div class="form-group" id="group-stock-qty">
+                        <label for="stock-quantity" id="label-stock-qty">Quantity *</label>
+                        <input type="number" min="1" id="stock-quantity" required placeholder="e.g. 10">
+                    </div>
+
+                    <div class="form-group" id="group-stock-target" style="display: none;">
+                        <label for="stock-target">New Actual Count *</label>
+                        <input type="number" min="0" id="stock-target" placeholder="New audited inventory count">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="stock-ref">Reference Number / Code</label>
+                        <input type="text" id="stock-ref" placeholder="e.g. PO-1029, SO-4421, AUDIT-OCT">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="stock-reason">Reason / Notes *</label>
+                        <textarea id="stock-reason" rows="2" required placeholder="State exact business reason for stock change..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-stock')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-stock">Submit Stock Change</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: PURCHASE ORDER CREATION MODAL -->
+    <div id="modal-po" class="modal-overlay">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <h3>Create Restock Purchase Order</h3>
+                <button class="modal-close" onclick="closeModal('modal-po')">&times;</button>
+            </div>
+            <form id="form-po" onsubmit="handlePOSubmit(event)">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="po-supplier">Supplier *</label>
+                            <select id="po-supplier" required></select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="po-order-date">Order Date *</label>
+                            <input type="date" id="po-order-date" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="po-delivery-date">Expected Delivery Date</label>
+                            <input type="date" id="po-delivery-date">
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="po-notes">Order Notes</label>
+                            <input type="text" id="po-notes" placeholder="e.g. Priority freight shipment">
+                        </div>
+                    </div>
+
+                    <div class="po-items-section">
+                        <div class="section-header">
+                            <h4>Order Line Items</h4>
+                            <button type="button" class="btn btn-sm btn-outline" onclick="addPOLineItem()">➕ Add Line Item</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 45%;">Product</th>
+                                        <th style="width: 20%;">Qty</th>
+                                        <th style="width: 20%;">Unit Cost ($)</th>
+                                        <th style="width: 15%;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-po-items">
+                                    <!-- Dynamic row items -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="po-total-display">
+                        <span>Calculated Total: </span>
+                        <strong id="po-preview-total">$0.00</strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-po')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: VIEW PURCHASE ORDER DETAILS & RECEIVE -->
+    <div id="modal-view-po" class="modal-overlay">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <h3 id="modal-view-po-number">PO Details</h3>
+                <button class="modal-close" onclick="closeModal('modal-view-po')">&times;</button>
+            </div>
+            <div class="modal-body" id="po-details-content">
+                <!-- Injected dynamically -->
+            </div>
+            <div class="modal-footer" id="po-details-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modal-view-po')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 5: CATEGORY MODAL -->
+    <div id="modal-category" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-category-title">Add Category</h3>
+                <button class="modal-close" onclick="closeModal('modal-category')">&times;</button>
+            </div>
+            <form id="form-category" onsubmit="handleCategorySubmit(event)">
+                <input type="hidden" id="cat-id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="cat-name">Category Name *</label>
+                        <input type="text" id="cat-name" required placeholder="e.g. Storage & Memory">
+                    </div>
+                    <div class="form-group">
+                        <label for="cat-desc">Description</label>
+                        <textarea id="cat-desc" rows="3" placeholder="Category purpose and item classifications..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-category')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 6: SUPPLIER MODAL -->
+    <div id="modal-supplier" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-supplier-title">Add Supplier</h3>
+                <button class="modal-close" onclick="closeModal('modal-supplier')">&times;</button>
+            </div>
+            <form id="form-supplier" onsubmit="handleSupplierSubmit(event)">
+                <input type="hidden" id="sup-id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="sup-name">Supplier / Company Name *</label>
+                        <input type="text" id="sup-name" required placeholder="e.g. Apex Hardware Ltd">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="sup-contact">Contact Person</label>
+                            <input type="text" id="sup-contact" placeholder="e.g. John Doe">
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="sup-email">Email Address *</label>
+                            <input type="email" id="sup-email" required placeholder="sales@supplier.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="sup-phone">Phone Number</label>
+                            <input type="text" id="sup-phone" placeholder="+1-555-019-2831">
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="sup-address">Address</label>
+                            <input type="text" id="sup-address" placeholder="City, State / Logistics Hub">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-supplier')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Supplier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 7: AUTHENTICATION / LOGIN -->
+    <div id="modal-auth" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>User Login / Role Switch</h3>
+                <button class="modal-close" onclick="closeModal('modal-auth')">&times;</button>
+            </div>
+            <form id="form-auth" onsubmit="handleAuthSubmit(event)">
+                <div class="modal-body">
+                    <p class="text-sm text-muted mb-3">Login to perform administrative and inventory operations under role-based access control.</p>
+                    
+                    <div class="quick-credentials-box">
+                        <strong>Quick Demo Credentials:</strong>
+                        <div class="btn-group-sm mt-1">
+                            <button type="button" class="btn btn-sm btn-outline" onclick="fillCredentials('admin', 'admin123')">🔑 Admin (admin / admin123)</button>
+                            <button type="button" class="btn btn-sm btn-outline" onclick="fillCredentials('staff', 'staff123')">👷 Staff (staff / staff123)</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="auth-username">Username or Email *</label>
+                        <input type="text" id="auth-username" required placeholder="admin or staff">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="auth-password">Password *</label>
+                        <input type="password" id="auth-password" required placeholder="••••••••">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-auth')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Application JavaScript Bundles -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/products.js"></script>
+    <script src="js/categories.js"></script>
+    <script src="js/suppliers.js"></script>
+    <script src="js/inventory.js"></script>
+    <script src="js/lowstock.js"></script>
+    <script src="js/purchaseorders.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,470 @@
+{
+  "info": {
+    "_postman_id": "c1f8e21a-9820-4a88-9d41-3b7c8812c419",
+    "name": "Smart Inventory Management System API",
+    "description": "Complete Postman API Collection for Smart Inventory Management System. Includes authentication, product catalog, categories, suppliers, stock movements, purchase orders, and reporting.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "summary"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List Products (Paginated & Filtered)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products?page=1&limit=10&search=&stock_status=&sortBy=created_at&order=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "" },
+                { "key": "stock_status", "value": "" },
+                { "key": "sortBy", "value": "created_at" },
+                { "key": "order", "value": "desc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"SKU-DESK-MAT-01\",\n  \"name\": \"Premium Felt Desk Mat Extended\",\n  \"description\": \"Waterproof non-slip gaming & office felt desk pad\",\n  \"category_id\": 2,\n  \"supplier_id\": 1,\n  \"unit_cost\": 12.00,\n  \"selling_price\": 24.99,\n  \"current_stock\": 25,\n  \"min_stock_threshold\": 8\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            }
+          }
+        },
+        {
+          "name": "Update Product Details",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Felt Desk Mat Extended Edition\",\n  \"selling_price\": 27.99,\n  \"min_stock_threshold\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "1"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Product Status (Active/Deactive)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "1", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            }
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Server & Storage Systems\",\n  \"description\": \"Enterprise rack servers, NAS drives, and backup appliances\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suppliers",
+      "item": [
+        {
+          "name": "List Suppliers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers"]
+            }
+          }
+        },
+        {
+          "name": "Create Supplier",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"SiliconCore Components Inc.\",\n  \"contact_person\": \"Alex Rivera\",\n  \"email\": \"procurement@siliconcore.com\",\n  \"phone\": \"+1-555-017-8899\",\n  \"address\": \"890 Silicon Blvd, Phoenix, AZ\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/suppliers",
+              "host": ["{{baseUrl}}"],
+              "path": ["suppliers"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inventory & Stock Movements",
+      "item": [
+        {
+          "name": "Get Low Stock Alerts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inventory/low-stock",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "low-stock"]
+            }
+          }
+        },
+        {
+          "name": "Get Stock Movement Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inventory/movements?page=1&limit=20&movementType=",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "movements"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "movementType", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Stock In (Add Inventory)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 15,\n  \"reason\": \"Supplier restock delivery intake\",\n  \"reference_number\": \"REC-2026-091\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/inventory/stock-in",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "stock-in"]
+            }
+          }
+        },
+        {
+          "name": "Stock Out (Remove Inventory)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 5,\n  \"reason\": \"Fulfillment dispatch order #9021\",\n  \"reference_number\": \"SO-9021\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/inventory/stock-out",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "stock-out"]
+            }
+          }
+        },
+        {
+          "name": "Manual Stock Adjustment (Audit Reconciliation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"new_stock\": 50,\n  \"reason\": \"Annual physical inventory warehouse audit count\",\n  \"reference_number\": \"AUDIT-Q4-2026\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/inventory/adjustments",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "adjustments"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Purchase Orders",
+      "item": [
+        {
+          "name": "List Purchase Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/purchase-orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["purchase-orders"]
+            }
+          }
+        },
+        {
+          "name": "Create Multi-Item Purchase Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"supplier_id\": 1,\n  \"order_date\": \"2026-10-27\",\n  \"expected_delivery_date\": \"2026-11-05\",\n  \"notes\": \"Standard replenishment batch\",\n  \"items\": [\n    {\n      \"product_id\": 1,\n      \"quantity_ordered\": 20,\n      \"unit_cost\": 65.00\n    },\n    {\n      \"product_id\": 2,\n      \"quantity_ordered\": 10,\n      \"unit_cost\": 42.50\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/purchase-orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["purchase-orders"]
+            }
+          }
+        },
+        {
+          "name": "Receive Purchase Order (Atomic Restock)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/purchase-orders/3/receive",
+              "host": ["{{baseUrl}}"],
+              "path": ["purchase-orders", "3", "receive"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Purchase Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/purchase-orders/4/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["purchase-orders", "4", "cancel"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports & CSV Export",
+      "item": [
+        {
+          "name": "Inventory Valuation Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/inventory",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "inventory"]
+            }
+          }
+        },
+        {
+          "name": "Category Valuation Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/valuation",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "valuation"]
+            }
+          }
+        },
+        {
+          "name": "Export Report as CSV",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/export.csv?type=inventory",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "export.csv"],
+              "query": [
+                { "key": "type", "value": "inventory" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

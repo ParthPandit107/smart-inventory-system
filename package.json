@@ -1,0 +1,34 @@
+{
+  "name": "smart-inventory-system",
+  "version": "1.0.0",
+  "description": "Full-stack Smart Inventory Management System with REST API, MySQL/SQLite support, audit trails, and reporting.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "init-db": "node database/init_db.js",
+    "init-db:force": "node database/init_db.js --force",
+    "test": "node tests/test_scenarios.js"
+  },
+  "keywords": [
+    "inventory-management",
+    "express",
+    "mysql",
+    "sqlite",
+    "rest-api",
+    "transactions",
+    "audit-trail"
+  ],
+  "author": "Student Full-Stack Developer",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.6.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "isomorphic-git": "^1.44.5",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.16.2"
+  }
+}
